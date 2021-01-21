@@ -8,8 +8,11 @@ http://www.gwicks.net/dictionaries.htm
 
 import csv
 import time
-from array import array
+
 import numpy as np
+import multiprocessing as mp
+
+from array import array
 from queue import PriorityQueue
 from functools import lru_cache
 
@@ -228,6 +231,56 @@ def levenshtein_edit_distance9(word1, word2):
     return levenshtein_current_row[-1]
 
 
+def levenshtein_edit_distance0_wrapper(q, word1, word2):
+    edit_dist = levenshtein_edit_distance0(word1, word2)
+    q.put((edit_dist, word2.upper()))
+
+
+def levenshtein_edit_distance1_wrapper(q, word1, word2):
+    edit_dist = levenshtein_edit_distance1(word1, word2)
+    q.put((edit_dist, word2.upper()))
+
+
+def levenshtein_edit_distance2_wrapper(q, word1, word2):
+    edit_dist = levenshtein_edit_distance2(word1, word2)
+    q.put((edit_dist, word2.upper()))
+
+
+def levenshtein_edit_distance3_wrapper(q, word1, word2):
+    edit_dist = levenshtein_edit_distance3(word1, word2)
+    q.put((edit_dist, word2.upper()))
+
+
+def levenshtein_edit_distance4_wrapper(q, word1, word2):
+    edit_dist = levenshtein_edit_distance4(word1, word2)
+    q.put((edit_dist, word2.upper()))
+
+
+def levenshtein_edit_distance5_wrapper(q, word1, word2):
+    edit_dist = levenshtein_edit_distance5(word1, word2)
+    q.put((edit_dist, word2.upper()))
+
+
+def levenshtein_edit_distance6_wrapper(q, word1, word2):
+    edit_dist = levenshtein_edit_distance6(word1, word2)
+    q.put((edit_dist, word2.upper()))
+
+
+def levenshtein_edit_distance7_wrapper(q, word1, word2):
+    edit_dist = levenshtein_edit_distance7(word1, word2)
+    q.put((edit_dist, word2.upper()))
+
+
+def levenshtein_edit_distance8_wrapper(q, word1, word2):
+    edit_dist = levenshtein_edit_distance8(word1, word2)
+    q.put((edit_dist, word2.upper()))
+
+
+def levenshtein_edit_distance9_wrapper(q, word1, word2):
+    edit_dist = levenshtein_edit_distance9(word1, word2)
+    q.put((edit_dist, word2.upper()))
+
+
 if __name__ == '__main__':
     # create list to store the english dictionary
     dictionary = []
@@ -250,17 +303,38 @@ if __name__ == '__main__':
                              levenshtein_edit_distance8,
                              levenshtein_edit_distance9]
 
-    # loop through each function for benchmarking
-    for func in levenshtein_functions:
-        levenshtein_edit_distances = PriorityQueue()
+    wrapper_functions = [levenshtein_edit_distance0_wrapper,
+                         levenshtein_edit_distance1_wrapper,
+                         levenshtein_edit_distance2_wrapper,
+                         levenshtein_edit_distance3_wrapper,
+                         levenshtein_edit_distance4_wrapper,
+                         levenshtein_edit_distance5_wrapper,
+                         levenshtein_edit_distance6_wrapper,
+                         levenshtein_edit_distance7_wrapper,
+                         levenshtein_edit_distance8_wrapper,
+                         levenshtein_edit_distance9_wrapper]
 
+    # loop through each function for benchmarking
+    for func, wrapper in zip(levenshtein_functions, wrapper_functions):
+
+        # Test single-threaded
+        levenshtein_edit_distances = PriorityQueue()
         start_time = time.time()
+
         for word in dictionary:
             edit_dist = func('CAVVAGES', word.upper())
             levenshtein_edit_distances.put((edit_dist, word.upper()))
-        print(func.__name__, time.time() - start_time)
+        single_thread_time = time.time() - start_time
 
-        # Print results from the 1st implementation
-        #for _ in range(5):
-        #    print(levenshtein_edit_distances.get())
-        #levenshtein_edit_distances = PriorityQueue()
+
+        # Test multi-threaded
+        m = mp.Manager()
+        levenshtein_edit_distances = m.Queue()
+        pool_tuple = [(levenshtein_edit_distances, 'CAVVAGES', word) for word in dictionary]
+
+        start_time = time.time()
+        with mp.Pool(mp.cpu_count()) as p:
+            p.starmap(wrapper, pool_tuple)
+        multi_thread_time = time.time() - start_time
+
+        print('| {:25s} | {:6.2f} | {:6.2f} |'.format(func.__name__, single_thread_time, multi_thread_time))
