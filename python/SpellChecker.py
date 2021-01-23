@@ -8,12 +8,12 @@ http://www.gwicks.net/dictionaries.htm
 
 import csv
 import time
+import heapq
 
 import numpy as np
 import multiprocessing as mp
 
 from array import array
-from queue import PriorityQueue
 from functools import lru_cache
 
 
@@ -231,54 +231,14 @@ def levenshtein_edit_distance9(word1, word2):
     return levenshtein_current_row[-1]
 
 
-def levenshtein_edit_distance0_wrapper(q, word1, word2):
-    edit_dist = levenshtein_edit_distance0(word1, word2)
-    q.put((edit_dist, word2.upper()))
+def levenshtein_edit_distance_wrapper(q, func, word1, words2):
+    results = []
+    for word in words2:
+        edit_dist = func(word1, word.upper())
+        results += [(edit_dist, word.upper())]
 
-
-def levenshtein_edit_distance1_wrapper(q, word1, word2):
-    edit_dist = levenshtein_edit_distance1(word1, word2)
-    q.put((edit_dist, word2.upper()))
-
-
-def levenshtein_edit_distance2_wrapper(q, word1, word2):
-    edit_dist = levenshtein_edit_distance2(word1, word2)
-    q.put((edit_dist, word2.upper()))
-
-
-def levenshtein_edit_distance3_wrapper(q, word1, word2):
-    edit_dist = levenshtein_edit_distance3(word1, word2)
-    q.put((edit_dist, word2.upper()))
-
-
-def levenshtein_edit_distance4_wrapper(q, word1, word2):
-    edit_dist = levenshtein_edit_distance4(word1, word2)
-    q.put((edit_dist, word2.upper()))
-
-
-def levenshtein_edit_distance5_wrapper(q, word1, word2):
-    edit_dist = levenshtein_edit_distance5(word1, word2)
-    q.put((edit_dist, word2.upper()))
-
-
-def levenshtein_edit_distance6_wrapper(q, word1, word2):
-    edit_dist = levenshtein_edit_distance6(word1, word2)
-    q.put((edit_dist, word2.upper()))
-
-
-def levenshtein_edit_distance7_wrapper(q, word1, word2):
-    edit_dist = levenshtein_edit_distance7(word1, word2)
-    q.put((edit_dist, word2.upper()))
-
-
-def levenshtein_edit_distance8_wrapper(q, word1, word2):
-    edit_dist = levenshtein_edit_distance8(word1, word2)
-    q.put((edit_dist, word2.upper()))
-
-
-def levenshtein_edit_distance9_wrapper(q, word1, word2):
-    edit_dist = levenshtein_edit_distance9(word1, word2)
-    q.put((edit_dist, word2.upper()))
+    for result in results:
+        q.put(result)
 
 
 if __name__ == '__main__':
@@ -303,38 +263,35 @@ if __name__ == '__main__':
                              levenshtein_edit_distance8,
                              levenshtein_edit_distance9]
 
-    wrapper_functions = [levenshtein_edit_distance0_wrapper,
-                         levenshtein_edit_distance1_wrapper,
-                         levenshtein_edit_distance2_wrapper,
-                         levenshtein_edit_distance3_wrapper,
-                         levenshtein_edit_distance4_wrapper,
-                         levenshtein_edit_distance5_wrapper,
-                         levenshtein_edit_distance6_wrapper,
-                         levenshtein_edit_distance7_wrapper,
-                         levenshtein_edit_distance8_wrapper,
-                         levenshtein_edit_distance9_wrapper]
-
     # loop through each function for benchmarking
-    for func, wrapper in zip(levenshtein_functions, wrapper_functions):
+    for func in levenshtein_functions:
 
         # Test single-threaded
-        levenshtein_edit_distances = PriorityQueue()
+        levenshtein_edit_distances = []
         start_time = time.time()
 
         for word in dictionary:
             edit_dist = func('CAVVAGES', word.upper())
-            levenshtein_edit_distances.put((edit_dist, word.upper()))
+            heapq.heappush(levenshtein_edit_distances, (edit_dist, word.upper()))
         single_thread_time = time.time() - start_time
-
 
         # Test multi-threaded
         m = mp.Manager()
         levenshtein_edit_distances = m.Queue()
-        pool_tuple = [(levenshtein_edit_distances, 'CAVVAGES', word) for word in dictionary]
+        pool_tuple = []
+        chunk_size = 10000
+
+        for i in range(0, len(dictionary), chunk_size):
+            pool_tuple += [(levenshtein_edit_distances, func, 'CAVVAGES', dictionary[i:i+chunk_size])]
 
         start_time = time.time()
         with mp.Pool(mp.cpu_count()) as p:
-            p.starmap(wrapper, pool_tuple)
+            p.starmap(levenshtein_edit_distance_wrapper, pool_tuple)
+
+        # copy contents to priority queue
+        priority_edit_distances = []
+        while not levenshtein_edit_distances.empty():
+            heapq.heappush(priority_edit_distances, levenshtein_edit_distances.get())
         multi_thread_time = time.time() - start_time
 
         print('| {:25s} | {:6.2f} | {:6.2f} |'.format(func.__name__, single_thread_time, multi_thread_time))

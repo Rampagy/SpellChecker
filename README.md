@@ -7,16 +7,16 @@ All benchmarks performed using Threadripper 3970x @ 3.70GHz, no boost clock
 
 | Algorithm | Single Threaded Time (s) | Multi-Threaded Time (s) |
 | :-------: | :----------------------: | :---------------------: |
-| levenshtein_edit_distance0 |  16.60 |  13.20 |
-| levenshtein_edit_distance1 |  14.45 |  13.51 |
-| levenshtein_edit_distance2 |  73.77 |  12.02 |
-| levenshtein_edit_distance3 |   4.09 |  10.58 |
-| levenshtein_edit_distance4 |   5.94 |  10.65 |
-| levenshtein_edit_distance5 |   4.37 |  10.64 |
-| levenshtein_edit_distance6 |   5.97 |  10.64 |
-| levenshtein_edit_distance7 |   9.37 |  10.84 |
-| levenshtein_edit_distance8 |   4.56 |  10.55 |
-| levenshtein_edit_distance9 |   4.48 |  10.51 |
+| levenshtein_edit_distance0 |  13.68 |  24.92 |
+| levenshtein_edit_distance1 |  11.89 |  24.81 |
+| levenshtein_edit_distance2 |  60.22 |  27.14 |
+| levenshtein_edit_distance3 |   3.30 |  19.02 |
+| levenshtein_edit_distance4 |   4.68 |  19.01 |
+| levenshtein_edit_distance5 |   3.44 |  19.32 |
+| levenshtein_edit_distance6 |   4.82 |  18.59 |
+| levenshtein_edit_distance7 |   7.61 |  19.29 |
+| levenshtein_edit_distance8 |   3.46 |  19.55 |
+| levenshtein_edit_distance9 |   3.49 |  19.30 |
 
 
 ## levenshtein_edit_distance0
